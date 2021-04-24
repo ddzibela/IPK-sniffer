@@ -5,7 +5,7 @@ CFLAGS = -lpcap
 
 .PHONY: compile clean pack
 
-compile: main.cpp
+compile: main.cpp headers.h
 	$(CC) $^ -o ipk-sniffer $(CFLAGS)
 
 clean:
