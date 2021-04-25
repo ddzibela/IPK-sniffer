@@ -5,12 +5,15 @@ CFLAGS = -lpcap
 
 .PHONY: compile clean pack
 
-compile: main.cpp headers.h
+compile: main.cpp headers.h protocols.h
 	$(CC) $^ -o ipk-sniffer $(CFLAGS)
+
+debug: main.cpp headers.h protocols.h
+	$(CC) -g $^ -o ipk-sniffer $(CFLAGS)
 
 clean:
 	-rm ipk-sniffer 2>/dev/null || true
-	-rm main 2>/dev/null || true
+#	-rm main 2>/dev/null || true
 	-rm xdzibe00.tar 2>/dev/null || true
 
 pack: clean
