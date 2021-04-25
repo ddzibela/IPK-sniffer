@@ -1,1 +1,22 @@
-todo
+Compilation:
+    $make compile
+or
+    $make
+
+Running:
+    $./ipk-sniffer [-i rozhraní | --interface rozhraní] {-p ­­port} {[--tcp|-t] [--udp|-u] [--arp] [--icmp] } {-n num}
+where:
+    -i interface to sniff on, if left blank will print all available devices
+    -p port to sniff on
+    -t only sniff TCP traffic
+    -u only sniff UDP traffic
+    --arp only sniff ARP traffic
+    --icmp only sniff ICMP traffic
+        If multiple protocols are specified the filter applies a logical OR operation.
+    -n number of packets to print, default 0, value of -1 will sniff until manually closed such as witch Control + C
+
+
+Supported link-layer types:
+    DLT_EN10MB
+
+File manifest:
