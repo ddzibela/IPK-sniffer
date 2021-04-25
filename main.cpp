@@ -12,6 +12,7 @@
 #include "protocols.h"
 
 #include <pcap/pcap.h>
+#include <arpa/inet.h>
 #include <pcap/sll.h>
 #include <net/ethernet.h>
 
@@ -75,18 +76,88 @@ std::string trimNonPrintable(std::string str)
     return str;
 }
 
-void printPacket(std::string time, std::string addr1, std::string port1,std::string addr2, std::string port2)
+void printPacket()
 {
-    std::cout << time << " " << addr1 << " : " << port1 << " > " << addr2 << " : " << port2 << ", length " << std::endl;
     //looop 16 bytes
         //cout << offfset << packet << trimNonPrintable(packet)
 }
 
-void gotPacket(u_char *args, const struct pcap_pkthdr *header,
-    const u_char *packet)
+void processIPpacket(int offset, const struct pcap_pkthdr *header, const u_char *packet)
+{
+    char sip[16], dip[16]; //source and dest IP addr
+    int sport{0}, dport{0}; //source and dest port
+    auto ip = (struct sniff_ip*)(packet + offset);
+    int ip_len = ntohs(ip->ip_len) * 4;
+
+    //obtain human readable IP address representation
+    inet_ntop(AF_INET, &(ip->ip_src), sip, sizeof(sip));
+    inet_ntop(AF_INET, &(ip->ip_dst), sip, sizeof(dip));
+
+    //obtain port numbers
+    switch (ntohs(ip->ip_p))
+    {
+    case prot_ICMP:{
+        break;
+    }
+    case prot_TCP:{
+        auto tcp = (struct sniff_tcp*)(packet + offset + ip_len);
+        sport = ntohs(tcp->th_sport);
+        dport = ntohs(tcp->th_dport);
+        break;
+    }
+    case prot_UDP:{
+        auto udp = (struct sniff_udp*)(packet + offset + ip_len);
+        sport = ntohs(udp->ud_sport);
+        dport = ntohs(udp->ud_dport);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+void processIPv6packet(const struct pcap_pkthdr *header, const u_char *packet)
 {
 
-    std::cout << header->len << std::endl;
+}
+
+void processARPpacket(const struct pcap_pkthdr *header, const u_char *packet)
+{
+    
+}
+
+void gotPacket(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
+{
+    
+    //this should never happen
+    if(args == nullptr){
+        return;
+    }
+    //standard ethernet
+    if(*args == DLT_EN10MB){
+        auto ethernet = (struct sniff_ethernet *)(packet);
+        switch(ntohs(ethernet->ether_type))
+        {
+        case ETHERTYPE_IP:
+            processIPpacket(SIZE_ETHERNET, header, packet);
+            break;
+        case ETHERTYPE_IPV6:
+            processIPv6packet(header, packet);
+            break;
+        case ETHERTYPE_ARP:
+            processARPpacket(header, packet);
+            break;
+        default:
+            break;
+        }
+    }
+    //linux SLL for "any" device
+    if(*args == DLT_LINUX_SLL){
+
+    }
+
+
+
 }
 
 /**
@@ -102,22 +173,29 @@ void getPackets(std::string device, char* filter, int num)
     bpf_u_int32 mask;		/* The netmask of our sniffing device */
     bpf_u_int32 net;		/* The IP of our sniffing device */
     
-    
+    //we need the network address to attach our packet filter
     if (pcap_lookupnet(device.c_str(), &net, &mask, errbuf) == -1) {
         net = 0;
         mask = 0;
     }
-    std::cerr << "creating handle" << std::endl;
+    //open a pcap handle
     pcap_t *handle = pcap_open_live(device.c_str(), BUFSIZ, 1, 1000, errbuf);
-    std::cerr << handle << std::endl;
     if(handle == nullptr){
         throw errbuf;
     }
-    if (pcap_compile(handle, &fp, filter, 0, net) == -1) {
+    //compile and attach the filter
+    if (pcap_compile(handle, &fp, filter, 0, net) == -1)
+    {
+        pcap_perror(handle, "");
+        throw 1;
     }
     if (pcap_setfilter(handle, &fp) == -1) {
+        pcap_perror(handle, "");
+        throw 1;
     }
-    pcap_loop(handle, 10, &gotPacket, nullptr);
+    //capture packets
+    unsigned char linktype = pcap_datalink(handle);
+    pcap_loop(handle, 10, &gotPacket, &linktype);
     pcap_close(handle);
 }
 
@@ -125,12 +203,14 @@ int main(int argc, char** argv)
 {
     //optArgs options = getOpts(argc, argv);
     try{
-        getPackets("eth0", " ", 10);
+        getPackets("eth0", "", 10);
     } catch (const char *error_buffer)
-    {
-        std::cerr << error_buffer << std::endl;
-    }
+    {   
 
+        std::cerr << "ERROR: " << error_buffer << std::endl;
+        return 2;
+    }
+/*
     try
     {
         listAllDevs();
@@ -139,6 +219,7 @@ int main(int argc, char** argv)
     {
         std::cerr << error_buffer << std::endl;
     }
-
+*/
     return 0;
+
 }
