@@ -15,17 +15,20 @@
  */
 #include <stdint.h>
 
+/* ethernet headers are always exactly 14 bytes */
+#define SIZE_ETHERNET 14
+
 /* Ethernet addresses are 6 bytes */
 #define ETHER_ADDR_LEN	6
 
-	/* Ethernet header */
+	/* Ethernet DLT_EN10MB header */
 	struct sniff_ethernet {
 		uint8_t ether_dhost[ETHER_ADDR_LEN]; /* Destination host address */
 		uint8_t ether_shost[ETHER_ADDR_LEN]; /* Source host address */
 		uint16_t ether_type; /* IP? ARP? RARP? etc */
 	};
 
-	/* IP header */
+	/* IPv4 header */
 	struct sniff_ip {
 		uint8_t ip_vhl;		/* version << 4 | header length >> 2 */
 		uint8_t ip_tos;		/* type of service */
@@ -43,6 +46,21 @@
 	};
 	#define IP_HL(ip)		(((ip)->ip_vhl) & 0x0f)
 	#define IP_V(ip)		(((ip)->ip_vhl) >> 4)
+
+	/* ARP header */
+	struct sniff_arp {
+		uint16_t arp_htype;	/* Hardware type */
+		uint16_t arp_ptype;	/* Protocol type */
+		uint8_t arp_hlen;	/* HW address length */
+		uint8_t arp_plen;	/* Protocol address length */
+		uint16_t arp_oper;	/* Operation */
+		uint8_t arp_sha[ETHER_ADDR_LEN]; /* Sender HW address */
+		uint8_t arp_spa[2]; /* Sender protocol address */
+		uint8_t arp_tha[ETHER_ADDR_LEN]; /* Target HW address */
+		uint8_t arp_tpa[2]; /* Target protocol address */
+	};
+
+	/* IPv6 header */
 
 	/* TCP header */
 	typedef unsigned int tcp_seq;
@@ -67,4 +85,20 @@
 		uint16_t th_win;		/* window */
 		uint16_t th_sum;		/* checksum */
 		uint16_t th_urp;		/* urgent pointer */
-};
+	};
+
+	/* UDP header */
+	struct sniff_udp {
+		uint16_t ud_sport;	/* source port */
+		uint16_t ud_dport;	/* destination port */
+		uint16_t ud_len;	/* length */
+		uint16_t ud_sum;	/* checksum */
+	};
+
+	/* ICMP header */
+	struct sniff_icmp {
+		uint8_t ic_type;	/* ICMP Type */
+		uint8_t ic_code;	/* ICMP subtype */
+		uint16_t ic_sum;	/* checksum */
+		uint32_t ic_rest;	/* rest of header */
+	};
