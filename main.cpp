@@ -8,8 +8,8 @@
 #include <iterator>
 #include <getopt.h>
 
-#include <headers.h>
-#include <protocols.h>
+#include "headers.h"
+#include "protocols.h"
 
 #include <pcap/pcap.h>
 #include <pcap/sll.h>
