@@ -1,3 +1,7 @@
+About
+A pcap based packet sniffer made for IPK course summer 2021 at FIT VUT.
+This project is about 90% complete, lacking output formatting, other parts should work as intended.
+
 Compilation:
     $make compile
 or
@@ -15,8 +19,12 @@ where:
         If multiple protocols are specified the filter applies a logical OR operation.
     -n number of packets to print, default 0, value of -1 will sniff until manually closed such as witch Control + C
 
-
 Supported link-layer types:
     DLT_EN10MB
 
-File manifest:
+License
+MODIFIED BEER-WARE LICENSE" (Revision 666):
+Denis Dzíbela wrote this project.  As long as you retain this notice you
+can do whatever you want with this stuff. Academic dishonesty is not cool,
+and you should not commit plagiarism. If we meet some day, and you think
+this stuff is worth it, you can buy me a beer in return.
